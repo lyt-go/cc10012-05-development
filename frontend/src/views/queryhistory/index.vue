@@ -8,8 +8,14 @@
       <div class="page-actions">
         <button class="btn primary" type="button" @click="openCreate">登记历史记录</button>
         <button class="btn" type="button" @click="exportRows">导出查询历史清单</button>
+        <RouterLink class="btn" to="/queryperf">查询性能聚合样本</RouterLink>
       </div>
     </header>
+
+    <p class="trace-hint">
+      本页是聚合链路的起点：每条执行行都带有脚本记录编号、统一为毫秒的执行耗时、返回行数和错误信息；
+      聚合后的平均耗时、返回行数和失败次数可在「查询性能聚合」按脚本核对。
+    </p>
 
     <div class="stat-row">
       <article v-for="item in stats" :key="item.label" class="stat-card">
@@ -55,6 +61,12 @@
             >
               {{ action }}
             </button>
+            <RouterLink
+              class="link"
+              :to="{ path: '/queryperf', query: { script: String(row['脚本记录编号'] ?? '') } }"
+            >
+              看聚合
+            </RouterLink>
           </td>
         </tr>
         <tr v-if="!rows.length">
@@ -79,19 +91,30 @@ import {
   moduleMeta,
   runAction as applyAction,
 } from '@/api/local-service'
+import { formatDate, parseDurationMs } from '@/data/perf-core'
 import type { EntryRow } from '@/data/types'
 
 const meta = moduleMeta('queryhistory')
-const columns = ["记录编号", "查询语句摘要", "执行时间", "返回行数", "执行耗时毫秒", "数据源", "执行人", "错误信息"]
+const columns = ["记录编号", "脚本记录编号", "脚本名称", "查询语句摘要", "执行时间", "返回行数", "执行耗时毫秒", "数据源", "执行人", "执行批次", "错误信息"]
 const actions = ["确认记录", "收藏记录", "删除记录"]
 const statuses = ["草稿", "已执行", "已收藏", "已删除"]
-const stats = [{"label": "历史记录总数", "value": 0}, {"label": "今日查询量", "value": 0}, {"label": "平均耗时毫秒", "value": 0}]
 
 const rows = ref<EntryRow[]>([])
 const total = ref(0)
+const stats = computed(() => {
+  const list = rows.value
+  const today = formatDate(new Date())
+  const durations = list.map((row) => parseDurationMs(row['执行耗时毫秒']))
+  const sum = durations.reduce((acc, value) => acc + value, 0)
+  return [
+    { label: '历史记录总数', value: total.value },
+    { label: '今日查询量', value: list.filter((row) => String(row['执行时间'] ?? '').startsWith(today)).length },
+    { label: '平均耗时毫秒', value: list.length ? Math.round(sum / list.length) : 0 },
+  ]
+})
 const errorMessage = ref('')
 const filters = ref<Record<string, string>>({})
-const filterFields = columns.slice(0, 3)
+const filterFields = ["记录编号", "脚本记录编号", "脚本名称"]
 const statusSummary = computed(() =>
   statuses.map((status: string) => ({
     status,
@@ -135,3 +158,14 @@ function reload() {
 
 onMounted(reload)
 </script>
+
+<style scoped>
+.trace-hint {
+  color: var(--muted);
+  font-size: 12px;
+  background: #eef2f7;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin: 0 0 10px;
+}
+</style>

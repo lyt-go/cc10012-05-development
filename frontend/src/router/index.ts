@@ -12,6 +12,7 @@ const Paramquery = () => import('@/views/paramquery/index.vue')
 const Schedulerjob = () => import('@/views/schedulerjob/index.vue')
 const Dataschema = () => import('@/views/dataschema/index.vue')
 const Queryopt = () => import('@/views/queryopt/index.vue')
+const Queryperf = () => import('@/views/queryperf/index.vue')
 const Pivotable = () => import('@/views/pivotable/index.vue')
 const Datacompare = () => import('@/views/datacompare/index.vue')
 const Permission = () => import('@/views/permission/index.vue')
@@ -34,6 +35,7 @@ const router = createRouter({
     { path: '/schedulerjob', name: 'schedulerjob', component: Schedulerjob },
     { path: '/dataschema', name: 'dataschema', component: Dataschema },
     { path: '/queryopt', name: 'queryopt', component: Queryopt },
+    { path: '/queryperf', name: 'queryperf', component: Queryperf },
     { path: '/pivotable', name: 'pivotable', component: Pivotable },
     { path: '/datacompare', name: 'datacompare', component: Datacompare },
     { path: '/permission', name: 'permission', component: Permission },
